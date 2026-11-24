@@ -83,7 +83,13 @@ def fetch_text(url: str):
                 page = browser.new_page(user_agent=BROWSER_UA)
                 page.goto(url, timeout=30000, wait_until="domcontentloaded")
                 page.wait_for_timeout(2500)           # let JavaScript-built content appear
-                text = page.inner_text("body")
+                # Prefer the page's <main> content: skips menus, headers and cookie banners
+                text = ""
+                if page.locator("main").count() > 0:
+                    text = page.locator("main").first.inner_text()
+                if len(text.strip()) < 200:
+                    text = page.inner_text("body")
+
                 browser.close()
         if len(text.strip()) < 50:
             raise ValueError("page looked empty")
@@ -174,6 +180,12 @@ def verify_with_llm(case, evidence):
     return json.loads(raw)
 
 
+def looks_like_menu(sentence: str) -> bool:
+    """Website menus read like 'Products Offers Service Contact Us' - mostly Capitalised words."""
+    words = [w for w in sentence.split() if w[:1].isalpha()]
+    return bool(words) and sum(w[0].isupper() for w in words) / len(words) > 0.5
+
+
 def verify_with_rules(case, evidence):
     """No-AI fallback so the demo never breaks."""
     findings = []
@@ -186,9 +198,14 @@ def verify_with_rules(case, evidence):
                              "why": "The error code appears in an official passage.",
                              "excerpt": hit[:200], "evidence_id": e["id"]})
         elif len(findings) < 3:
-            findings.append({"label": "Likely", "title": "Related troubleshooting step",
-                             "why": "Passage matches the reported symptoms but does not confirm the cause.",
-                             "excerpt": sentences[0][:200], "evidence_id": e["id"]})
+            # quote the sentence that best matches the symptoms (skip tiny fragments like "6.")
+            kws = keywords(case)
+            useful = [s for s in sentences if 40 <= len(s) <= 300 and not looks_like_menu(s)]
+            best = max(useful, key=lambda s: sum(k in s.lower() for k in kws), default=None)
+            if best and sum(k in best.lower() for k in kws) > 0:
+                findings.append({"label": "Likely", "title": "Related troubleshooting step",
+                                 "why": "Passage matches the reported symptoms but does not confirm the cause.",
+                                 "excerpt": best[:200], "evidence_id": e["id"]})
         if any(w in e["text"].lower() for w in UNSAFE_WORDS) and not any(f["label"] == "Unsafe" for f in findings):
             findings.append({"label": "Unsafe", "title": "Involves internal electrical parts",
                              "why": "This needs an authorised technician.",
@@ -225,8 +242,22 @@ PRICE_RE = re.compile(r"(?:₹|Rs\.?|INR)\s?([\d,]+(?:\.\d+)?)")
 
 
 def find_price(text: str):
-    for v in PRICE_RE.findall(text):
-        val = float(v.replace(",", ""))
+    """
+    Find the selling price on a shop page.
+    Shop pages also show struck-out MRPs ("Original price was: ₹3,480") and menu links
+    ("Under ₹500"), so we can't just take the first ₹ amount we see.
+    """
+    # 1. Many shops label the real price: "Current price is: ₹2,250.00" -> trust that first
+    m = re.search(r"current price[^₹\d]{0,20}" + PRICE_RE.pattern, text, re.IGNORECASE)
+    if m:
+        return float(m.group(1).replace(",", ""))
+
+    # 2. Otherwise take the first sensible price that is NOT an MRP / menu link
+    for m in PRICE_RE.finditer(text):
+        before = text[max(0, m.start() - 25):m.start()].lower()
+        if any(w in before for w in ["under", "original", "was", "mrp", "m.r.p"]):
+            continue                 # skip "Under ₹500", "Original price was ₹3,480", "M.R.P.: ₹2,999"
+        val = float(m.group(1).replace(",", ""))
         if 50 <= val <= 300000:      # ignore silly numbers
             return val
     return None

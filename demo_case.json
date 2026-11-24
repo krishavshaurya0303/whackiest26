@@ -1,19 +1,19 @@
 {
-  "brand": "[Brand]",
-  "model": "[MODEL-NO]",
+  "brand": "Bosch",
+  "model": "WGA1340SIN",
   "category": "Front-load washing machine",
-  "error_code": "[ERROR CODE]",
-  "problem": "Water stays in the drum after the cycle ends and the display shows an error code.",
+  "error_code": "E:36",
+  "problem": "Water stays in the drum after the cycle ends and the display shows E:36 / -10.",
   "purchase_date": "2024-03",
   "warranty_years": 2,
   "official_sources": [
-    "https://REPLACE-with-the-official-support-page-for-this-model",
-    "https://REPLACE-with-the-official-manual.pdf"
+    "https://www.bosch-home.com/in/service/get-support/washing-machine-does-not-drain-water",
+    "https://media3.bosch-home.com/Documents/9001795155_A.pdf"
   ],
   "part_name": "Drain pump",
   "part_sources": [
-    "https://REPLACE-with-part-shop-page-1",
-    "https://REPLACE-with-part-shop-page-2"
+    "https://payflip.in/product/bosch-fully-automatic-front-load-washing-machine-drain-pump-motor/",
+    "https://www.amazon.in/PARDZWORLD-B15-6A-Suitable-Washing-Machines/dp/B0BRSLDNTQ"
   ],
   "part_price_fallback": null,
   "service_visit_cost": null,
