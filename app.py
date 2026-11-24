@@ -35,17 +35,18 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@112,700;112,800;112,900&family=Space+Grotesk:wght@500;600;700&family=Space+Mono:wght@400;700&display=swap');
 :root { /* Black / Burgundy / White palette */
-        --paper:#000000; --card:#111111; --sunk:#1a1a1a; --grid:transparent; --line:#2a2a2a;
-        --edge:#333333; --shade:#2a2a2a;
-        --ink:#ffffff; --ink2:#c9c9c9; --ink3:#8a8a8a;
+        --paper:#1f1f22; --card:#2b2b2f; --sunk:#36363b; --grid:transparent; --line:#45454b;
+        --edge:#56565d; --shade:#121214;
+        --ink:#ffffff; --ink2:#dadada; --ink3:#a6a6ac;
         --orange:#6d001a;        /* burgundy: fills (buttons, step blocks, dot, hover shadow) */
-        --orange-ink:#e2365b;    /* brighter burgundy for small accent text on black */
+        --orange-ink:#f0516f;    /* brighter burgundy for small accent text on black */
         --blue:#d6d6d6; --blue-line:#333333; --amber:#d9a441; --green:#8fb573;
         --flow: cubic-bezier(.22, 1, .36, 1);            /* soft glide-and-settle */
         --spring: cubic-bezier(.34, 1.56, .64, 1); }     /* tiny overshoot, feels alive */
 
-/* plain dark background */
-.stApp { background-color: var(--paper); }
+/* charcoal background with a soft burgundy glow at the top */
+.stApp { background-color: var(--paper);
+         background-image: radial-gradient(ellipse 90% 55% at 15% -10%, rgba(109,0,26,.55), transparent 70%); }
 header[data-testid="stHeader"] { background: transparent; }
 .block-container { padding-top: 1.4rem; max-width: 1280px; }
 
