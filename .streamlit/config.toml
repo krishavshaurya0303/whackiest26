@@ -1,7 +1,7 @@
-# MendMap theme - same dark palette as our AlgoViz project
+# MendMap theme - black / burgundy / white
 [theme]
 base = "dark"
-primaryColor = "#c8553d"              # coral accent
-backgroundColor = "#1b1916"           # warm near-black
-secondaryBackgroundColor = "#25221e"  # card / input surface
-textColor = "#ece4d4"                 # warm off-white
+primaryColor = "#6d001a"              # burgundy
+backgroundColor = "#000000"           # black
+secondaryBackgroundColor = "#111111"  # card / input surface
+textColor = "#ffffff"                 # white

@@ -29,16 +29,18 @@ st.set_page_config(page_title=APP_NAME, layout="wide")
 demo = json.loads((BASE / "demo_case.json").read_text(encoding="utf-8"))
 
 # ---------------------------------------------------------------- look & feel
-# Colours = AlgoViz dark mode. Motion inspired by the wHACKiest 2026 site (not a copy): heavy display type,
+# Colours = black / burgundy (#6D001A) / white. Motion inspired by the wHACKiest 2026 site (not a copy): heavy display type,
 # a square accent full stop, blue mono labels, and bold "lift with a hard shadow" hover motion on cards.
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@112,700;112,800;112,900&family=Space+Grotesk:wght@500;600;700&family=Space+Mono:wght@400;700&display=swap');
-:root { /* AlgoViz dark-mode palette */
-        --paper:#1b1916; --card:#25221e; --sunk:#2c2824; --grid:rgba(236,228,212,.035); --line:#38332c;
-        --edge:#4d463d; --shade:#0c0b09;
-        --ink:#ece4d4; --ink2:#b8ad9b; --ink3:#857b6c; --orange:#c8553d; --orange-ink:#e07a62;
-        --blue:#7f9cc0; --blue-line:#3e4a5a; --amber:#d9a441; --green:#8fb573;
+:root { /* Black / Burgundy / White palette */
+        --paper:#000000; --card:#111111; --sunk:#1a1a1a; --grid:transparent; --line:#2a2a2a;
+        --edge:#333333; --shade:#2a2a2a;
+        --ink:#ffffff; --ink2:#c9c9c9; --ink3:#8a8a8a;
+        --orange:#6d001a;        /* burgundy: fills (buttons, step blocks, dot, hover shadow) */
+        --orange-ink:#e2365b;    /* brighter burgundy for small accent text on black */
+        --blue:#d6d6d6; --blue-line:#333333; --amber:#d9a441; --green:#8fb573;
         --flow: cubic-bezier(.22, 1, .36, 1);            /* soft glide-and-settle */
         --spring: cubic-bezier(.34, 1.56, .64, 1); }     /* tiny overshoot, feels alive */
 
@@ -68,7 +70,7 @@ header[data-testid="stHeader"] { background: transparent; }
            padding: 8px 0 22px; border-bottom: 1.5px solid var(--edge); margin-bottom: 18px; }
 .stApp .mm-display { font-size: clamp(54px, 8vw, 104px); line-height: .95; margin: 6px 0 0; }
 .mm-display .w { display: inline-block; animation: mm-word .9s var(--flow) both; }
-.mm-dot { display: inline-block; width: .16em; height: .16em; background: var(--orange); margin-left: .04em;
+.mm-dot { display: inline-block; width: .16em; height: .16em; background: var(--orange-ink); margin-left: .04em;
           animation: mm-dot 1s var(--spring) .55s both, mm-blink 2.4s ease-in-out 1.6s infinite; }
 .mm-sub { font-size: 20px; font-weight: 500; color: var(--ink2); max-width: 420px; line-height: 1.5;
           animation: mm-rise .9s var(--flow) .25s both; }
@@ -105,13 +107,13 @@ header[data-testid="stHeader"] { background: transparent; }
     background: var(--sunk); border-color: var(--ink); color: var(--ink); }
 .stButton > button:active, .stDownloadButton > button:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--shade); }
 .stButton > button[kind="primary"] { background: var(--orange); border-color: var(--orange); color: #fff; }
-.stButton > button[kind="primary"]:hover { background: #d9664c; color: #fff; }
+.stButton > button[kind="primary"]:hover { background: #8a0022; color: #fff; }
 .stButton > button[kind="primary"]:hover { box-shadow: 6px 6px 0 var(--shade); }
 
 /* ---------------- Agent Trace as a timeline: orange line that draws itself, numbered boxes ---------------- */
 .mm-step { position: relative; display: flex; gap: 14px; align-items: flex-start; padding: 8px 0 12px;
            animation: mm-slide .6s var(--flow) both; }
-.mm-step::before { content: ""; position: absolute; left: 21px; top: 44px; bottom: -6px; width: 2px; background: var(--orange);
+.mm-step::before { content: ""; position: absolute; left: 21px; top: 44px; bottom: -6px; width: 2px; background: var(--orange-ink);
                    transform-origin: top; animation: mm-draw .7s var(--flow) .2s both; }
 .mm-step .n { flex: 0 0 auto; width: 44px; height: 36px; display: grid; place-items: center; background: var(--orange); color: #fff;
               border: 1.5px solid var(--edge); box-shadow: 3px 3px 0 var(--shade); font-size: 15px; font-weight: 700;
@@ -119,8 +121,8 @@ header[data-testid="stHeader"] { background: transparent; }
 .mm-step:hover .n { transform: translate(-2px, -2px) rotate(-4deg); box-shadow: 5px 5px 0 var(--orange); }
 .mm-step .t { font-weight: 700; font-size: 17.5px; }
 .mm-step .d { color: var(--ink2); font-weight: 500; font-size: 16px; }
-.mm-step.needs_you .n { background: var(--blue); color: #1b1916; }
-.mm-step.needs_you .t { color: var(--blue); }
+.mm-step.needs_you .n { background: #ffffff; color: #000000; }
+.mm-step.needs_you .t { color: #ffffff; text-decoration: underline 2px var(--orange-ink); }
 .mm-step.failed .n { background: #e8553e; }
 .mm-src { font-size: 12.5px; color: var(--ink3); word-break: break-all; }
 
@@ -132,7 +134,7 @@ header[data-testid="stHeader"] { background: transparent; }
 /* evidence */
 .mm-chip { display: inline-block; padding: 3px 10px; border-radius: 3px; font-weight: 700; font-size: 13.5px;
            border: 1.5px solid var(--edge) !important; box-shadow: 2px 2px 0 var(--shade); animation: mm-pop .55s var(--spring) both; }
-.mm-quote { border-left: 4px solid var(--orange); background: var(--sunk); padding: 8px 12px; margin: 6px 0 3px;
+.mm-quote { border-left: 4px solid var(--orange-ink); background: var(--sunk); padding: 8px 12px; margin: 6px 0 3px;
             color: var(--ink); font-weight: 600; font-size: 17px; animation: mm-rise .7s var(--flow) both; }
 .mm-opt { padding: 8px 10px; margin: 0 -10px; border-radius: 4px; transition: background .25s, transform .35s var(--spring); }
 .mm-opt:hover { background: var(--sunk); transform: translateX(6px); }
