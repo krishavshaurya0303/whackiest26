@@ -17,6 +17,7 @@ import datetime
 import html
 import io
 import json
+import hashlib
 import pathlib
 import re
 import sys
@@ -50,8 +51,9 @@ STOPWORDS = {"the", "and", "after", "ends", "shows", "with", "that", "this", "st
 # ---------------------------------------------------------------- 2. INVESTIGATE helpers
 
 def slug(url: str) -> str:
-    """Turn a URL into a safe file name for the cache."""
-    return re.sub(r"[^a-zA-Z0-9]+", "_", url)[-120:]
+    """Turn a URL into a short, safe file name for the cache (short = no Windows path-length errors)."""
+    readable = re.sub(r"[^a-zA-Z0-9]+", "_", url)[-40:]
+    return readable + "_" + hashlib.md5(url.encode()).hexdigest()[:8]
 
 
 def fetch_text(url: str):
