@@ -64,6 +64,8 @@ with right:
                 st.write(f"{icon.get(s['status'], '•')} **{s['n']}. {s['title']}** - {s['detail']}")
                 if s["source"]:
                     st.caption(s["source"])
+                if s.get("shot"):   # what the agent's browser saw on this page
+                    st.image(s["shot"], width=420)
             st.session_state.passport = agent.run(case, on_step=show)
             status.update(label="Done - paused for your confirmation", state="complete")
     elif "passport" in st.session_state:

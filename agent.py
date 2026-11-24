@@ -56,6 +56,14 @@ def slug(url: str) -> str:
     return readable + "_" + hashlib.md5(url.encode()).hexdigest()[:8]
 
 
+SHOTS = OUT / "shots"       # one screenshot per web page the agent opens
+SHOTS.mkdir(exist_ok=True)
+
+
+def shot_path(url: str) -> pathlib.Path:
+    return SHOTS / (slug(url) + ".png")
+
+
 def fetch_text(url: str):
     """
     Read one source and return (text, how).
@@ -83,6 +91,22 @@ def fetch_text(url: str):
                 page = browser.new_page(user_agent=BROWSER_UA)
                 page.goto(url, timeout=30000, wait_until="domcontentloaded")
                 page.wait_for_timeout(2500)           # let JavaScript-built content appear
+                # Privacy-first: decline optional cookies if a banner shows, then take a screenshot
+                # of what the agent "sees" - shown in the Agent Trace so judges watch it browse
+                try:
+                    page.get_by_text("Decline all", exact=True).first.click(timeout=1500)
+                    page.wait_for_timeout(500)
+                except Exception:
+                    pass
+                # hide "Delivering to <area PIN>" so the screenshot never shows the user's location
+                page.evaluate("""() => {
+                    const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+                    let n; while ((n = w.nextNode())) {
+                        if (/Delivering to|Deliver to/i.test(n.textContent)) n.textContent = 'Delivering to [hidden]';
+                        else if (/^\\s*\\d{6}\\s*$/.test(n.textContent)) n.textContent = '';
+                    }
+                }""")
+                page.screenshot(path=str(shot_path(url)))
                 # Prefer the page's <main> content: skips menus, headers and cookie banners
                 text = ""
                 if page.locator("main").count() > 0:
@@ -268,6 +292,13 @@ def find_price(text: str):
     return None
 
 
+def compatibility(case, text: str) -> str:
+    """Does the shop page name the user's exact model, or is it a generic 'suitable for' part?"""
+    if case["model"].lower() in text.lower():
+        return "page names your model"
+    return "generic part - compatibility with your model NOT confirmed"
+
+
 def warranty(case):
     y, m = map(int, case["purchase_date"].split("-")[:2])
     years = int(case.get("warranty_years") or 0)
@@ -325,7 +356,10 @@ def run(case, on_step=lambda s: None):
     trace = []
 
     def step(title, detail, source="", status="done"):
-        s = {"n": len(trace) + 1, "title": title, "detail": detail, "source": source, "status": status}
+        # attach the screenshot of this page, if the agent took one
+        shot = str(shot_path(source)) if source.startswith("http") and shot_path(source).exists() else None
+        s = {"n": len(trace) + 1, "title": title, "detail": detail, "source": source, "status": status,
+             "shot": shot}
         trace.append(s)
         on_step(s)
 
@@ -358,9 +392,10 @@ def run(case, on_step=lambda s: None):
         try:
             text, how = fetch_text(url)
             price = find_price(text)
+            fit = compatibility(case, text)
             if price and (part["price"] is None or price < part["price"]):
-                part = {"price": price, "note": f"Lowest price found ({how})", "source": url}
-            step("Checked part price", f"{rupees(price)} · {how}", url)
+                part = {"price": price, "note": f"Lowest price found ({how}) · {fit}", "source": url}
+            step("Checked part price", f"{rupees(price)} · {fit} · {how}", url)
         except Exception as e:
             step("Could not check part price", f"{type(e).__name__}", url, "failed")
     if part["price"] is None and case.get("part_price_fallback"):
