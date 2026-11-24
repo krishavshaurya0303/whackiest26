@@ -93,6 +93,8 @@ def fetch_text(url: str):
                 browser.close()
         if len(text.strip()) < 50:
             raise ValueError("page looked empty")
+        # Shops show "Delivering to <your area + PIN code>" - don't keep the user's location
+        text = re.sub(r"Delivering to [^\n]*", "Delivering to [location removed]", text)
         cache_file.write_text(text, encoding="utf-8")  # save for offline demo
         return text, "read live"
     except Exception as e:
