@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Service Request (demo copy)</title>
+<style>
+  body { font-family: system-ui, sans-serif; background: #F2F4F5; margin: 0; padding: 32px; color: #15181C; }
+  form { background: #fff; max-width: 560px; margin: auto; padding: 24px; border-radius: 12px; border: 1px solid #D9DEE2; }
+  label { display: block; font-weight: 600; font-size: 14px; margin-top: 14px; }
+  input, textarea { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #C5CCD2; border-radius: 8px; font: inherit; margin-top: 4px; }
+  button { margin-top: 20px; width: 100%; padding: 12px; border: 0; border-radius: 8px; background: #0E6E62; color: #fff; font-weight: 700; font-size: 16px; }
+  .note { font-size: 12px; color: #4B5560; }
+</style>
+</head>
+<body>
+<form onsubmit="alert('Submitted by the user.'); return false;">
+  <h2 style="margin-top:0">Book a service visit</h2>
+  <p class="note">Demo copy of a brand service-request form. MendMap fills it; only the user clicks Submit.</p>
+  <label for="name">Your name</label><input id="name">
+  <label for="brand">Brand</label><input id="brand">
+  <label for="model">Model number</label><input id="model">
+  <label for="purchase">Purchase date</label><input id="purchase">
+  <label for="fault">Describe the fault</label><textarea id="fault" rows="4"></textarea>
+  <button type="submit">Submit request</button>
+</form>
+</body>
+</html>

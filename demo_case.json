@@ -1,0 +1,22 @@
+{
+  "brand": "[Brand]",
+  "model": "[MODEL-NO]",
+  "category": "Front-load washing machine",
+  "error_code": "[ERROR CODE]",
+  "problem": "Water stays in the drum after the cycle ends and the display shows an error code.",
+  "purchase_date": "2024-03",
+  "warranty_years": 2,
+  "official_sources": [
+    "https://REPLACE-with-the-official-support-page-for-this-model",
+    "https://REPLACE-with-the-official-manual.pdf"
+  ],
+  "part_name": "Drain pump",
+  "part_sources": [
+    "https://REPLACE-with-part-shop-page-1",
+    "https://REPLACE-with-part-shop-page-2"
+  ],
+  "part_price_fallback": null,
+  "service_visit_cost": null,
+  "replacement_price": null,
+  "customer_name": "Demo User"
+}

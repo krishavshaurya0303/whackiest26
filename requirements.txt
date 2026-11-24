@@ -1,0 +1,7 @@
+streamlit
+playwright
+pypdf
+requests
+python-dotenv
+boto3
+google-genai
