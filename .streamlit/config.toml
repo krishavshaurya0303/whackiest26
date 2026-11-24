@@ -1,7 +1,7 @@
-# MendMap theme - same "Peach and Steel" palette as our AlgoViz project
+# MendMap theme - same dark palette as our AlgoViz project
 [theme]
-base = "light"
-primaryColor = "#fe8254"              # peach accent
-backgroundColor = "#eadfc8"           # paper
-secondaryBackgroundColor = "#f3ebda"  # card / input surface
-textColor = "#2b3f45"                 # steel ink
+base = "dark"
+primaryColor = "#c8553d"              # coral accent
+backgroundColor = "#1b1916"           # warm near-black
+secondaryBackgroundColor = "#25221e"  # card / input surface
+textColor = "#ece4d4"                 # warm off-white

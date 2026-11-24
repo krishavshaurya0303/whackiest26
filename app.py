@@ -29,136 +29,149 @@ st.set_page_config(page_title=APP_NAME, layout="wide")
 demo = json.loads((BASE / "demo_case.json").read_text(encoding="utf-8"))
 
 # ---------------------------------------------------------------- look & feel
-# Same "Peach and Steel" design as our AlgoViz project: paper background, steel header band,
-# peach accent, Atkinson Hyperlegible (made for readability) + IBM Plex Mono for numbers.
+# Colours = AlgoViz dark mode. Motion inspired by the wHACKiest 2026 site (not a copy): heavy display type,
+# a square accent full stop, blue mono labels, and bold "lift with a hard shadow" hover motion on cards.
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@500;600;700;800&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
-:root { --paper:#eadfc8; --card:#f3ebda; --sunk:#e4d8bf; --line:#c4b598; --steel:#3f5a62;
-        --ink:#2b3f45; --ink2:#4a5b60; --ink3:#58666b; --peach:#fe8254; --peach-ink:#a8441f; }
-/* our fonts beat Streamlit's default "Source Sans" (icons keep their own font) */
-.stApp, .stApp p, .stApp div, .stApp span:not([data-testid="stIconMaterial"]), .stApp label,
-.stApp input, .stApp textarea, .stApp button, .stApp h1, .stApp h2, .stApp h3 {
-    font-family: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", "Segoe UI", sans-serif; }
-.stApp code, .stApp .mono, .stApp .mm-flow, .stApp .mm-flow *, .stApp .mm-step .n, .stApp .mm-src, .stApp .mm-cost {
-    font-family: "IBM Plex Mono", monospace !important; }
-.stApp code, .stApp .mono { font-weight: 600; }
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@112,700;112,800;112,900&family=Space+Grotesk:wght@500;600;700&family=Space+Mono:wght@400;700&display=swap');
+:root { /* AlgoViz dark-mode palette */
+        --paper:#1b1916; --card:#25221e; --sunk:#2c2824; --grid:rgba(236,228,212,.035); --line:#38332c;
+        --edge:#4d463d; --shade:#0c0b09;
+        --ink:#ece4d4; --ink2:#b8ad9b; --ink3:#857b6c; --orange:#c8553d; --orange-ink:#e07a62;
+        --blue:#7f9cc0; --blue-line:#3e4a5a; --amber:#d9a441; --green:#8fb573;
+        --flow: cubic-bezier(.22, 1, .36, 1);            /* soft glide-and-settle */
+        --spring: cubic-bezier(.34, 1.56, .64, 1); }     /* tiny overshoot, feels alive */
 
-/* bolder, bigger text everywhere (easy to read on a projector / in the video) */
-.stMarkdown p, .stMarkdown li, .stCaption, [data-testid="stCaptionContainer"] {
-    font-size: 17px; font-weight: 500; }
+/* dark background with a very faint grid */
+.stApp { background-color: var(--paper);
+         background-image: linear-gradient(var(--grid) 1px, transparent 1px),
+                           linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+         background-size: 44px 44px; }
+header[data-testid="stHeader"] { background: transparent; }
+.block-container { padding-top: 1.4rem; max-width: 1280px; }
+
+/* fonts: Space Grotesk for text, Archivo (wide + heavy) for headings, Space Mono for labels/numbers */
+.stApp, .stApp p, .stApp div, .stApp span:not([data-testid="stIconMaterial"]), .stApp label,
+.stApp input, .stApp textarea, .stApp button { font-family: "Space Grotesk", "Segoe UI", sans-serif; color: var(--ink); }
+.stApp h1, .stApp h2, .stApp h3, .stApp .mm-display { font-family: "Archivo", "Arial Black", sans-serif !important;
+    font-stretch: 112%; font-weight: 900 !important; letter-spacing: -0.025em; color: var(--ink); }
+.stApp code, .stApp .mono, .stApp .mm-label, .stApp .mm-label *, .stApp .mm-step .n, .stApp .mm-src, .stApp .mm-cost {
+    font-family: "Space Mono", monospace !important; }
+
+/* bold, readable text */
+.stMarkdown p, .stMarkdown li, .stCaption, [data-testid="stCaptionContainer"] { font-size: 17px; font-weight: 500; }
 [data-testid="stWidgetLabel"] p { font-size: 15px !important; font-weight: 700 !important; color: var(--ink) !important; }
 .stTextInput input, .stTextArea textarea, .stNumberInput input { font-size: 16.5px !important; font-weight: 600 !important;
-    color: var(--ink) !important; }
-.stMarkdown b, .stMarkdown strong { font-weight: 800; }
-h1, h2, h3 { font-weight: 800 !important; letter-spacing: -0.01em; }
-.stButton > button p, .stDownloadButton > button p { font-size: 16.5px; font-weight: 800; }
-.block-container { padding-top: 1.2rem; max-width: 1280px; }
-header[data-testid="stHeader"] { background: transparent; }
+    color: var(--ink) !important; background: var(--card) !important; }
+.stTextInput > div, .stTextArea > div, .stNumberInput > div > div { border: 1.5px solid var(--edge) !important; border-radius: 4px !important; }
+.stMarkdown b, .stMarkdown strong { font-weight: 700; }
 
-/* steel header band with the brand, like the AlgoViz sidebar */
-.mm-hero { background: var(--steel); color: var(--paper); border-radius: 14px; padding: 22px 26px;
-           display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
-.mm-brand { display: flex; align-items: center; gap: 14px; }
-.mm-logo { width: 44px; height: 44px; border-radius: 10px; background: var(--peach); display: grid;
-           place-items: center; font-size: 22px; }
-.mm-name { font-size: 32px; font-weight: 800; line-height: 1.1; }
-.mm-sub { color: #d3dcdd; font-size: 16px; font-weight: 600; }
-.mm-flow { display: flex; gap: 6px; flex-wrap: wrap; font-family: "IBM Plex Mono", monospace; font-size: 13.5px;
-           font-weight: 600; }
-.mm-flow span { border: 1px solid rgba(234,223,200,.35); border-radius: 6px; padding: 4px 9px; color: var(--paper); }
-.mm-flow b { color: var(--peach); font-weight: 500; }
+/* ---------------- header ---------------- */
+.mm-hero { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap;
+           padding: 8px 0 22px; border-bottom: 1.5px solid var(--edge); margin-bottom: 18px; }
+.stApp .mm-display { font-size: clamp(54px, 8vw, 104px); line-height: .95; margin: 6px 0 0; }
+.mm-display .w { display: inline-block; animation: mm-word .9s var(--flow) both; }
+.mm-dot { display: inline-block; width: .16em; height: .16em; background: var(--orange); margin-left: .04em;
+          animation: mm-dot 1s var(--spring) .55s both, mm-blink 2.4s ease-in-out 1.6s infinite; }
+.mm-sub { font-size: 20px; font-weight: 500; color: var(--ink2); max-width: 420px; line-height: 1.5;
+          animation: mm-rise .9s var(--flow) .25s both; }
+.mm-label { color: var(--blue); font-size: 13.5px; letter-spacing: .22em; text-transform: uppercase; font-weight: 700; }
+.mm-flow { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+.mm-flow span { border: 1.5px solid var(--edge); background: var(--card); padding: 5px 10px; font-size: 12.5px;
+                box-shadow: 3px 3px 0 var(--shade); transition: transform .35s var(--spring), box-shadow .35s var(--spring),
+                background .2s; animation: mm-rise .7s var(--flow) both; }
+.mm-flow span:nth-child(2) { animation-delay: .08s; } .mm-flow span:nth-child(3) { animation-delay: .16s; }
+.mm-flow span:nth-child(4) { animation-delay: .24s; } .mm-flow span:nth-child(5) { animation-delay: .32s; }
+.mm-flow span:hover { transform: translate(-3px, -3px); box-shadow: 6px 6px 0 var(--shade); background: var(--orange); }
+.mm-flow b { color: var(--orange-ink); }
+.mm-flow span:hover b { color: #fff; }
 
-/* section headings: small caps eyebrow in accent ink */
-.mm-eyebrow { color: var(--peach-ink); font-size: 14px; font-weight: 800; letter-spacing: .1em;
-              text-transform: uppercase; margin: 6px 0 2px; }
+/* section labels: "01 / YOUR PRODUCT" in blue mono */
+.mm-eyebrow { font-family: "Space Mono", monospace !important; color: var(--blue); font-size: 13.5px; font-weight: 700;
+              letter-spacing: .2em; text-transform: uppercase; margin: 4px 0 6px; animation: mm-rise .7s var(--flow) both; }
 
-/* cards = Streamlit bordered containers */
-.stApp [class*="st-key-card"] { background: var(--card); border-color: var(--line) !important; border-radius: 12px !important; }
+/* ---------------- cards: lift with a hard black shadow + orange edge on hover ---------------- */
+.stApp [class*="st-key-card"] { background: var(--card); border: 1.5px solid var(--edge) !important; border-radius: 6px !important;
+    box-shadow: 4px 4px 0 var(--shade); animation: mm-rise .85s var(--flow) both;
+    transition: transform .4s var(--spring), box-shadow .4s var(--spring), border-color .25s; }
+.stApp .st-key-card_trace, .stApp .st-key-card_warranty { animation-delay: .12s; }
+.stApp .st-key-card_options { animation-delay: .24s; }
+.stApp [class*="st-key-card"]:hover { transform: translate(-4px, -4px); box-shadow: 9px 9px 0 var(--orange);
+    border-color: var(--orange) !important; }
 
-/* buttons: primary = peach with dark ink (as in AlgoViz), others = paper with a border */
-.stButton > button, .stDownloadButton > button { border-radius: 8px; border: 1px solid var(--line);
-    background: var(--card); color: var(--ink); font-weight: 700; }
-.stButton > button:hover, .stDownloadButton > button:hover { background: #d9cbad; border-color: var(--steel); color: var(--ink); }
-.stButton > button[kind="primary"] { background: var(--peach); border-color: var(--peach); color: var(--ink); }
-.stButton > button[kind="primary"]:hover { background: #ff9a74; border-color: #ff9a74; color: var(--ink); }
+/* ---------------- buttons ---------------- */
+.stButton > button, .stDownloadButton > button { border-radius: 4px; border: 1.5px solid var(--edge); background: var(--card);
+    color: var(--ink); box-shadow: 3px 3px 0 var(--shade);
+    transition: transform .3s var(--spring), box-shadow .3s var(--spring), background .2s; }
+.stButton > button p, .stDownloadButton > button p { font-size: 16.5px; font-weight: 700; letter-spacing: .01em; }
+.stButton > button:hover, .stDownloadButton > button:hover { transform: translate(-3px, -3px); box-shadow: 6px 6px 0 var(--orange);
+    background: var(--sunk); border-color: var(--ink); color: var(--ink); }
+.stButton > button:active, .stDownloadButton > button:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--shade); }
+.stButton > button[kind="primary"] { background: var(--orange); border-color: var(--orange); color: #fff; }
+.stButton > button[kind="primary"]:hover { background: #d9664c; color: #fff; }
+.stButton > button[kind="primary"]:hover { box-shadow: 6px 6px 0 var(--shade); }
 
-/* inputs sit slightly sunk into the card */
-.stTextInput input, .stTextArea textarea, .stNumberInput input, div[data-baseweb="select"] > div {
-    background: var(--sunk) !important; border-color: var(--line) !important; }
+/* ---------------- Agent Trace as a timeline: orange line that draws itself, numbered boxes ---------------- */
+.mm-step { position: relative; display: flex; gap: 14px; align-items: flex-start; padding: 8px 0 12px;
+           animation: mm-slide .6s var(--flow) both; }
+.mm-step::before { content: ""; position: absolute; left: 21px; top: 44px; bottom: -6px; width: 2px; background: var(--orange);
+                   transform-origin: top; animation: mm-draw .7s var(--flow) .2s both; }
+.mm-step .n { flex: 0 0 auto; width: 44px; height: 36px; display: grid; place-items: center; background: var(--orange); color: #fff;
+              border: 1.5px solid var(--edge); box-shadow: 3px 3px 0 var(--shade); font-size: 15px; font-weight: 700;
+              animation: mm-pop .55s var(--spring) both; transition: transform .3s var(--spring), box-shadow .3s var(--spring); }
+.mm-step:hover .n { transform: translate(-2px, -2px) rotate(-4deg); box-shadow: 5px 5px 0 var(--orange); }
+.mm-step .t { font-weight: 700; font-size: 17.5px; }
+.mm-step .d { color: var(--ink2); font-weight: 500; font-size: 16px; }
+.mm-step.needs_you .n { background: var(--blue); color: #1b1916; }
+.mm-step.needs_you .t { color: var(--blue); }
+.mm-step.failed .n { background: #e8553e; }
+.mm-src { font-size: 12.5px; color: var(--ink3); word-break: break-all; }
 
-/* Agent Trace rows */
-.mm-step { display: flex; gap: 10px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--line); }
-.mm-step .n { font-family: "IBM Plex Mono", monospace; color: var(--peach-ink); min-width: 26px; font-weight: 600;
-              font-size: 17px; }
-.mm-step .t { font-weight: 800; font-size: 17.5px; }
-.mm-step .d { color: var(--ink2); font-weight: 600; font-size: 16px; }
-.mm-step.needs_you .t { color: var(--peach-ink); }
-.mm-step.failed .t { color: #b5452e; }
-.mm-src { font-family: "IBM Plex Mono", monospace; font-size: 12.5px; font-weight: 500; color: var(--ink3);
-          word-break: break-all; }
+/* screenshots: framed like little windows, tilt slightly when hovered */
+[data-testid="stImage"] img { border: 1.5px solid var(--edge); border-radius: 4px; box-shadow: 4px 4px 0 var(--shade);
+    animation: mm-rise .8s var(--flow) both; transition: transform .4s var(--spring), box-shadow .4s var(--spring); }
+[data-testid="stImage"] img:hover { transform: translate(-3px, -3px) rotate(-.6deg); box-shadow: 8px 8px 0 var(--orange); }
 
-/* evidence label chips */
-.mm-chip { padding: 3px 10px; border-radius: 6px; font-weight: 800; font-size: 14px; border: 1.5px solid; }
-.mm-quote { border-left: 4px solid var(--steel); background: var(--sunk); padding: 8px 12px; border-radius: 0 6px 6px 0;
-            margin: 6px 0 3px; color: var(--ink); font-weight: 700; font-size: 17px; }
-/* ---------------- fluid motion ----------------
-   One soft "ease-out" curve everywhere so things glide in and settle, never snap. */
-:root { --flow: cubic-bezier(.22, 1, .36, 1); }
-@keyframes mm-rise   { from { opacity: 0; transform: translateY(18px); filter: blur(4px); }
-                       to   { opacity: 1; transform: none; filter: none; } }
-@keyframes mm-slide  { from { opacity: 0; transform: translateX(-14px); } to { opacity: 1; transform: none; } }
-@keyframes mm-pop    { 0% { opacity: 0; transform: scale(.85); } 70% { transform: scale(1.06); } 100% { opacity: 1; transform: none; } }
-@keyframes mm-sheen  { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-@keyframes mm-float  { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-4px) rotate(-6deg); } }
-@keyframes mm-wave   { 0%, 100% { border-color: rgba(234,223,200,.35); background: transparent; }
-                       50% { border-color: var(--peach); background: rgba(254,130,84,.18); } }
+/* evidence */
+.mm-chip { display: inline-block; padding: 3px 10px; border-radius: 3px; font-weight: 700; font-size: 13.5px;
+           border: 1.5px solid var(--edge) !important; box-shadow: 2px 2px 0 var(--shade); animation: mm-pop .55s var(--spring) both; }
+.mm-quote { border-left: 4px solid var(--orange); background: var(--sunk); padding: 8px 12px; margin: 6px 0 3px;
+            color: var(--ink); font-weight: 600; font-size: 17px; animation: mm-rise .7s var(--flow) both; }
+.mm-opt { padding: 8px 10px; margin: 0 -10px; border-radius: 4px; transition: background .25s, transform .35s var(--spring); }
+.mm-opt:hover { background: var(--sunk); transform: translateX(6px); }
+.mm-note { font-size: 14.5px; font-weight: 500; color: var(--ink2); }
+.mm-cost { font-weight: 700; font-size: 18px; color: var(--orange-ink); }
 
-/* header: the steel band slowly flows like liquid; the logo floats; the 5 steps light up in a wave */
-.mm-hero { background: linear-gradient(120deg, #3f5a62, #4c6a6f, #35505a, #576d70); background-size: 300% 300%;
-           animation: mm-sheen 14s ease-in-out infinite, mm-rise .9s var(--flow) both; }
-.mm-logo { animation: mm-float 4s ease-in-out infinite; }
-.mm-flow span { animation: mm-wave 5s ease-in-out infinite; }
-.mm-flow span:nth-child(2) { animation-delay: .5s; }  .mm-flow span:nth-child(3) { animation-delay: 1s; }
-.mm-flow span:nth-child(4) { animation-delay: 1.5s; } .mm-flow span:nth-child(5) { animation-delay: 2s; }
+/* ---------------- keyframes ---------------- */
+@keyframes mm-rise  { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+@keyframes mm-word  { from { opacity: 0; transform: translateY(60%) skewY(6deg); } to { opacity: 1; transform: none; } }
+@keyframes mm-slide { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; transform: none; } }
+@keyframes mm-pop   { 0% { opacity: 0; transform: scale(.6); } 100% { opacity: 1; transform: none; } }
+@keyframes mm-dot   { 0% { transform: scale(0) rotate(-90deg); } 100% { transform: none; } }
+@keyframes mm-blink { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+@keyframes mm-draw  { from { transform: scaleY(0); } to { transform: scaleY(1); } }
 
-/* cards rise in one after another */
-.stApp [class*="st-key-card"] { animation: mm-rise .8s var(--flow) both;
-    transition: transform .45s var(--flow), box-shadow .45s var(--flow); }
-div[data-testid="stColumn"]:nth-child(2) .stApp [class*="st-key-card"] { animation-delay: .12s; }
-div[data-testid="stColumn"]:nth-child(3) .stApp [class*="st-key-card"] { animation-delay: .24s; }
-.stApp [class*="st-key-card"]:hover { transform: translateY(-3px);
-    box-shadow: 0 14px 30px -18px rgba(43,63,69,.45); }
-
-/* each Agent Trace step slides in as the agent works; screenshots fade up */
-.mm-step { animation: mm-slide .6s var(--flow) both; }
-[data-testid="stImage"] img { animation: mm-rise .8s var(--flow) both; border-radius: 8px;
-    box-shadow: 0 10px 24px -16px rgba(43,63,69,.6); }
-.mm-chip { display: inline-block; animation: mm-pop .55s var(--flow) both; }
-.mm-quote, .mm-eyebrow { animation: mm-rise .7s var(--flow) both; }
-
-/* buttons: springy lift on hover, gentle press */
-.stButton > button, .stDownloadButton > button {
-    transition: transform .35s var(--flow), box-shadow .35s var(--flow), background .25s ease; }
-.stButton > button:hover, .stDownloadButton > button:hover { transform: translateY(-2px);
-    box-shadow: 0 10px 22px -12px rgba(168,68,31,.55); }
-.stButton > button:active { transform: translateY(0) scale(.98); }
+/* sections reveal as you scroll down to them (browsers that support scroll-driven animations) */
+@supports (animation-timeline: view()) {
+  .stApp [class*="st-key-card"], [data-testid="stImage"] img {
+      animation: mm-rise linear both; animation-timeline: view(); animation-range: entry 0% entry 40%; }
+}
 
 /* respect people who turn motion off in their OS settings */
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
-
-.mm-note { font-size: 14.5px; font-weight: 600; color: var(--ink2); }
-.mm-cost { font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 18px; color: var(--ink); }
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown(f"""
-<div class="mm-hero">
-  <div class="mm-brand"><div class="mm-logo">🔧</div>
-    <div><div class="mm-name">{APP_NAME}</div><div class="mm-sub">{TAGLINE}</div></div></div>
-  <div class="mm-flow"><span><b>1</b> Identify</span><span><b>2</b> Investigate</span><span><b>3</b> Verify</span>
-    <span><b>4</b> Decide</span><span><b>5</b> Fix</span></div>
-</div>""", unsafe_allow_html=True)
+# (HTML kept on single lines: Streamlit's markdown turns indented lines into code blocks)
+flow = "".join(f"<span><b>{i:02d}</b> {w}</span>" for i, w in
+               enumerate(["Identify", "Investigate", "Verify", "Decide", "Fix"], 1))
+st.markdown(
+    f"<div class='mm-hero'><div>"
+    f"<div class='mm-label'>wHACKiest 2026 · Track 2 · Beyond the Browser</div>"
+    f"<div class='mm-display' role='heading' aria-level='1'><span class='w'>{APP_NAME}</span><span class='mm-dot'></span></div>"
+    f"<div class='mm-flow mm-label'>{flow}</div></div>"
+    f"<div class='mm-sub'>{TAGLINE} A browser agent that proves the fix from the manufacturer, then gets it done.</div>"
+    f"</div>", unsafe_allow_html=True)
 st.write("")
 
 
@@ -173,7 +186,7 @@ left, right = st.columns([1, 1.4], gap="large")
 
 # ---------------------------------------------------------------- 1. the input form
 with left, st.container(border=True, key="card_form"):
-    st.markdown("<div class='mm-eyebrow'>Step 1 · Your product</div>", unsafe_allow_html=True)
+    st.markdown("<div class='mm-eyebrow'>01 / Your product</div>", unsafe_allow_html=True)
     brand = st.text_input("Brand", demo["brand"])
     model = st.text_input("Model number", demo["model"])
     category = st.text_input("Product type", demo["category"])
@@ -190,7 +203,7 @@ with left, st.container(border=True, key="card_form"):
 
 # ---------------------------------------------------------------- 2. run the agent with a live trace
 with right, st.container(border=True, key="card_trace"):
-    st.markdown("<div class='mm-eyebrow'>Step 2 · Agent Trace - every site the agent visits</div>",
+    st.markdown("<div class='mm-eyebrow'>02 / Agent trace - every site it visits</div>",
                 unsafe_allow_html=True)
     if go:
         case = dict(demo)  # keep extra fields (prices, customer name) from demo_case.json
@@ -218,7 +231,7 @@ p = st.session_state.get("passport")
 if p:
     st.write("")
     c = p["case"]
-    st.markdown(f"<div class='mm-eyebrow'>Step 3 · Repair Passport</div>"
+    st.markdown(f"<div class='mm-eyebrow'>03 / Repair passport</div>"
                 f"<h2 style='margin:0 0 8px'>{html.escape(c['brand'])} {html.escape(c['model'])} · "
                 f"<span class='mono'>{html.escape(c['error_code'])}</span></h2>", unsafe_allow_html=True)
     d, w, r = st.columns([1.5, 1, 1.2], gap="medium")
@@ -248,13 +261,13 @@ if p:
     with r, st.container(border=True, key="card_options"):
         st.markdown("**Repair or replace?**")
         for o in p["options"]:
-            st.markdown(f"<div style='margin:8px 0'><span class='mm-cost'>{html.escape(o['cost'])}</span> · "
+            st.markdown(f"<div class='mm-opt'><span class='mm-cost'>{html.escape(o['cost'])}</span> · "
                         f"<b>{html.escape(o['name'])}</b><div class='mm-note'>{html.escape(o['note'])}</div></div>",
                         unsafe_allow_html=True)
 
     st.error("Unplug before any check. Anything marked **Unsafe** goes to an authorised technician.")
 
-    st.markdown("<div class='mm-eyebrow'>Step 4 · Service request - pre-filled, NOT submitted</div>",
+    st.markdown("<div class='mm-eyebrow'>04 / Service request - pre-filled, NOT submitted</div>",
                 unsafe_allow_html=True)
     if p["form_screenshot"] and pathlib.Path(p["form_screenshot"]).exists():
         st.image(p["form_screenshot"], caption="Stopped before Submit - review and submit yourself.")
