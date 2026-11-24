@@ -8,6 +8,7 @@ Screen layout:
   right = live Agent Trace (each step appears as the agent works)
   below = Repair Passport + pre-filled service form + extras (voice, complaint letter)
 """
+import html
 import json
 import os
 import pathlib
@@ -27,14 +28,91 @@ BASE = pathlib.Path(__file__).parent
 st.set_page_config(page_title=APP_NAME, layout="wide")
 demo = json.loads((BASE / "demo_case.json").read_text(encoding="utf-8"))
 
-st.title(APP_NAME)
-st.caption(TAGLINE)
+# ---------------------------------------------------------------- look & feel
+# Same "Peach and Steel" design as our AlgoViz project: paper background, steel header band,
+# peach accent, Atkinson Hyperlegible (made for readability) + IBM Plex Mono for numbers.
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+:root { --paper:#eadfc8; --card:#f3ebda; --sunk:#e4d8bf; --line:#c4b598; --steel:#3f5a62;
+        --ink:#2b3f45; --ink2:#4a5b60; --ink3:#58666b; --peach:#fe8254; --peach-ink:#a8441f; }
+html, body, [class*="css"], .stMarkdown, input, textarea, button, label {
+    font-family: "Atkinson Hyperlegible", "Segoe UI", sans-serif !important; }
+code, .mono { font-family: "IBM Plex Mono", monospace !important; }
+.block-container { padding-top: 1.2rem; max-width: 1280px; }
+header[data-testid="stHeader"] { background: transparent; }
+
+/* steel header band with the brand, like the AlgoViz sidebar */
+.mm-hero { background: var(--steel); color: var(--paper); border-radius: 14px; padding: 22px 26px;
+           display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
+.mm-brand { display: flex; align-items: center; gap: 14px; }
+.mm-logo { width: 44px; height: 44px; border-radius: 10px; background: var(--peach); display: grid;
+           place-items: center; font-size: 22px; }
+.mm-name { font-size: 26px; font-weight: 700; line-height: 1.1; }
+.mm-sub { color: #b9c7c9; font-size: 14px; }
+.mm-flow { display: flex; gap: 6px; flex-wrap: wrap; font-family: "IBM Plex Mono", monospace; font-size: 12px; }
+.mm-flow span { border: 1px solid rgba(234,223,200,.35); border-radius: 6px; padding: 4px 9px; color: var(--paper); }
+.mm-flow b { color: var(--peach); font-weight: 500; }
+
+/* section headings: small caps eyebrow in accent ink */
+.mm-eyebrow { color: var(--peach-ink); font-size: 12px; font-weight: 700; letter-spacing: .1em;
+              text-transform: uppercase; margin: 6px 0 2px; }
+
+/* cards = Streamlit bordered containers */
+div[data-testid="stVerticalBlockBorderWrapper"] { background: var(--card); border-color: var(--line) !important;
+                                                  border-radius: 10px !important; }
+
+/* buttons: primary = peach with dark ink (as in AlgoViz), others = paper with a border */
+.stButton > button, .stDownloadButton > button { border-radius: 8px; border: 1px solid var(--line);
+    background: var(--card); color: var(--ink); font-weight: 700; }
+.stButton > button:hover, .stDownloadButton > button:hover { background: #d9cbad; border-color: var(--steel); color: var(--ink); }
+.stButton > button[kind="primary"] { background: var(--peach); border-color: var(--peach); color: var(--ink); }
+.stButton > button[kind="primary"]:hover { background: #ff9a74; border-color: #ff9a74; color: var(--ink); }
+
+/* inputs sit slightly sunk into the card */
+.stTextInput input, .stTextArea textarea, .stNumberInput input, div[data-baseweb="select"] > div {
+    background: var(--sunk) !important; border-color: var(--line) !important; }
+
+/* Agent Trace rows */
+.mm-step { display: flex; gap: 10px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.mm-step .n { font-family: "IBM Plex Mono", monospace; color: var(--peach-ink); min-width: 22px; }
+.mm-step .t { font-weight: 700; }
+.mm-step .d { color: var(--ink2); }
+.mm-step.needs_you .t { color: var(--peach-ink); }
+.mm-step.failed .t { color: #b5452e; }
+.mm-src { font-family: "IBM Plex Mono", monospace; font-size: 11.5px; color: var(--ink3); word-break: break-all; }
+
+/* evidence label chips */
+.mm-chip { padding: 2px 9px; border-radius: 6px; font-weight: 700; font-size: 12.5px; border: 1px solid; }
+.mm-quote { border-left: 3px solid var(--steel); background: var(--sunk); padding: 6px 10px; border-radius: 0 6px 6px 0;
+            margin: 4px 0 2px; color: var(--ink); }
+.mm-note { font-size: 13px; color: var(--ink3); }
+.mm-cost { font-family: "IBM Plex Mono", monospace; font-weight: 500; color: var(--ink); }
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown(f"""
+<div class="mm-hero">
+  <div class="mm-brand"><div class="mm-logo">🔧</div>
+    <div><div class="mm-name">{APP_NAME}</div><div class="mm-sub">{TAGLINE}</div></div></div>
+  <div class="mm-flow"><span><b>1</b> Identify</span><span><b>2</b> Investigate</span><span><b>3</b> Verify</span>
+    <span><b>4</b> Decide</span><span><b>5</b> Fix</span></div>
+</div>""", unsafe_allow_html=True)
+st.write("")
+
+
+def step_html(s):
+    """One Agent Trace row: number, title, detail, source URL."""
+    src = f"<div class='mm-src'>{html.escape(s['source'])}</div>" if s["source"] else ""
+    return (f"<div class='mm-step {s['status']}'><span class='n'>{s['n']:02d}</span><div>"
+            f"<span class='t'>{html.escape(s['title'])}</span> <span class='d'>· {html.escape(s['detail'])}</span>"
+            f"{src}</div></div>")
 
 left, right = st.columns([1, 1.4], gap="large")
 
 # ---------------------------------------------------------------- 1. the input form
-with left:
-    st.subheader("1 · Your product")
+with left, st.container(border=True):
+    st.markdown("<div class='mm-eyebrow'>Step 1 · Your product</div>", unsafe_allow_html=True)
     brand = st.text_input("Brand", demo["brand"])
     model = st.text_input("Model number", demo["model"])
     category = st.text_input("Product type", demo["category"])
@@ -50,67 +128,73 @@ with left:
     st.caption("Reads official sources first. Never submits anything without you.")
 
 # ---------------------------------------------------------------- 2. run the agent with a live trace
-with right:
-    st.subheader("2 · Agent Trace")
+with right, st.container(border=True):
+    st.markdown("<div class='mm-eyebrow'>Step 2 · Agent Trace - every site the agent visits</div>",
+                unsafe_allow_html=True)
     if go:
         case = dict(demo)  # keep extra fields (prices, customer name) from demo_case.json
         case.update(brand=brand, model=model, category=category, error_code=error_code,
                     purchase_date=purchase, warranty_years=years, problem=problem, part_name=part_name,
                     official_sources=[u.strip() for u in sources.splitlines() if u.strip()],
                     part_sources=[u.strip() for u in part_sources.splitlines() if u.strip()])
-        icon = {"done": "✅", "failed": "⚠️", "needs_you": "⏸️"}
         with st.status("Agent working...", expanded=True) as status:
             def show(s):
-                st.write(f"{icon.get(s['status'], '•')} **{s['n']}. {s['title']}** - {s['detail']}")
-                if s["source"]:
-                    st.caption(s["source"])
+                st.markdown(step_html(s), unsafe_allow_html=True)
                 if s.get("shot"):   # what the agent's browser saw on this page
-                    st.image(s["shot"], width=420)
+                    st.image(s["shot"], width=440)
             st.session_state.passport = agent.run(case, on_step=show)
-            status.update(label="Done - paused for your confirmation", state="complete")
+            # keep the trace open after the run so every step + screenshot stays visible
+            status.update(label="Done - paused for your confirmation", state="complete", expanded=True)
     elif "passport" in st.session_state:
         for s in st.session_state.passport["trace"]:
-            st.write(f"**{s['n']}. {s['title']}** - {s['detail']}")
+            st.markdown(step_html(s), unsafe_allow_html=True)
     else:
-        st.info("Fill in your product and press **Start investigation**.")
+        st.markdown("<div class='mm-quote'>Fill in your product and press <b>Start investigation</b>. "
+                    "Each page the agent opens will appear here with a screenshot.</div>", unsafe_allow_html=True)
 
 # ---------------------------------------------------------------- 3. the Repair Passport
 p = st.session_state.get("passport")
 if p:
-    st.divider()
+    st.write("")
     c = p["case"]
-    st.subheader(f"Repair Passport · {c['brand']} {c['model']} · {c['error_code']}")
-    d, w, r = st.columns(3, gap="large")
+    st.markdown(f"<div class='mm-eyebrow'>Step 3 · Repair Passport</div>"
+                f"<h2 style='margin:0 0 8px'>{html.escape(c['brand'])} {html.escape(c['model'])} · "
+                f"<span class='mono'>{html.escape(c['error_code'])}</span></h2>", unsafe_allow_html=True)
+    d, w, r = st.columns([1.5, 1, 1.2], gap="medium")
 
-    with d:
-        st.markdown("**Diagnosis**")
+    with d, st.container(border=True):
+        st.markdown("**Diagnosis** - every claim has a source")
         if not p["findings"]:
             st.write("No evidence found. Add an official source and run again.")
         for f in p["findings"]:
-            bg, fg = agent.COLORS.get(f["label"], ("#E6E9EC", "#3D4650"))
-            st.markdown(f"<span style='background:{bg};color:{fg};padding:2px 9px;border-radius:99px;"
-                        f"font-weight:700;font-size:13px'>{f['label']}</span> **{f['title']}**",
-                        unsafe_allow_html=True)
-            st.write(f["why"])
+            bg, fg = agent.COLORS.get(f["label"], ("#d9cbad", "#2b3f45"))
+            quote = ""
             if f.get("excerpt"):
-                st.caption(f"“{f['excerpt']}” - {f.get('source', '')}"
-                           f"{' p.' + str(f['page']) if f.get('page') else ''}")
+                page = f" · p.{f['page']}" if f.get("page") else ""
+                quote = (f"<div class='mm-quote'>“{html.escape(f['excerpt'])}”</div>"
+                         f"<div class='mm-src'>{html.escape(f.get('source', ''))}{page}</div>")
+            st.markdown(f"<div style='margin:10px 0'><span class='mm-chip' style='background:{bg};color:{fg};"
+                        f"border-color:{fg}55'>{f['label']}</span> <b>{html.escape(f['title'])}</b>"
+                        f"<div style='color:var(--ink2)'>{html.escape(f['why'])}</div>{quote}</div>",
+                        unsafe_allow_html=True)
 
-    with w:
+    with w, st.container(border=True):
         st.markdown("**Warranty**")
         (st.success if p["warranty"]["inside"] else st.warning)(
             f"{p['warranty']['status']} (until {p['warranty']['ends']})")
         st.caption(p["warranty"]["note"])
 
-    with r:
+    with r, st.container(border=True):
         st.markdown("**Repair or replace?**")
         for o in p["options"]:
-            st.write(f"**{o['cost']}** · {o['name']}")
-            st.caption(o["note"])
+            st.markdown(f"<div style='margin:8px 0'><span class='mm-cost'>{html.escape(o['cost'])}</span> · "
+                        f"<b>{html.escape(o['name'])}</b><div class='mm-note'>{html.escape(o['note'])}</div></div>",
+                        unsafe_allow_html=True)
 
     st.error("Unplug before any check. Anything marked **Unsafe** goes to an authorised technician.")
 
-    st.markdown("**Service request (pre-filled, NOT submitted)**")
+    st.markdown("<div class='mm-eyebrow'>Step 4 · Service request - pre-filled, NOT submitted</div>",
+                unsafe_allow_html=True)
     if p["form_screenshot"] and pathlib.Path(p["form_screenshot"]).exists():
         st.image(p["form_screenshot"], caption="Stopped before Submit - review and submit yourself.")
 

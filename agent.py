@@ -422,8 +422,9 @@ def run(case, on_step=lambda s: None):
 
 # ---------------------------------------------------------------- shareable Repair Passport (HTML)
 
-COLORS = {"Verified": ("#DDF3EC", "#0B5A4E"), "Likely": ("#FBEBD3", "#8A4B06"),
-          "Unknown": ("#E6E9EC", "#3D4650"), "Unsafe": ("#FBE0DE", "#9B1C1C")}
+# (background, text) per evidence label - tints of the AlgoViz "Peach and Steel" palette
+COLORS = {"Verified": ("#d5e3cf", "#2f5a3a"), "Likely": ("#f1ddb0", "#7a5208"),
+          "Unknown": ("#d9cbad", "#2b3f45"), "Unsafe": ("#f0cfc4", "#8e3221")}
 
 
 def passport_html(p):
@@ -441,11 +442,15 @@ def passport_html(p):
                    for o in p["options"])
     trace = "".join(f"<li><b>{e(s['title'])}</b> - {e(s['detail'])}</li>" for s in p["trace"])
     return f"""<!doctype html><html><head><meta charset="utf-8"><title>Repair Passport</title>
-<style>body{{font-family:system-ui,sans-serif;max-width:860px;margin:32px auto;padding:0 16px;color:#15181C}}
-.f{{border:1px solid #D9DEE2;border-radius:10px;padding:12px;margin:10px 0}}.b{{padding:2px 9px;border-radius:99px;font-size:13px;font-weight:700}}
-blockquote{{margin:6px 0;padding:6px 10px;background:#F2F4F5;border-radius:6px}}table{{width:100%;border-collapse:collapse}}
-td{{border-bottom:1px solid #E5E8EB;padding:8px}}.warn{{background:#FBE0DE;color:#7A1616;padding:10px;border-radius:8px}}</style></head><body>
-<p style="letter-spacing:.12em;font-size:12px;font-weight:700;color:#0E6E62">MENDMAP · REPAIR PASSPORT</p>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>body{{font-family:"Atkinson Hyperlegible",system-ui,sans-serif;max-width:860px;margin:32px auto;padding:0 16px;
+color:#2b3f45;background:#eadfc8}}a{{color:#3f5a62}}
+.f{{border:1px solid #c4b598;background:#f3ebda;border-radius:10px;padding:12px;margin:10px 0}}
+.b{{padding:2px 9px;border-radius:6px;font-size:13px;font-weight:700}}
+blockquote{{margin:6px 0;padding:6px 10px;background:#e4d8bf;border-left:3px solid #3f5a62;border-radius:0 6px 6px 0}}
+table{{width:100%;border-collapse:collapse;background:#f3ebda;border-radius:10px}}
+td{{border-bottom:1px solid #c4b598;padding:8px}}.warn{{background:#f0cfc4;color:#8e3221;padding:10px;border-radius:8px}}</style></head><body>
+<p style="letter-spacing:.12em;font-size:12px;font-weight:700;color:#a8441f">MENDMAP · REPAIR PASSPORT</p>
 <h1>{e(c['brand'])} {e(c['model'])} · {e(c['error_code'])}</h1><p>{e(c['problem'])}</p>
 <h2>Diagnosis</h2>{rows or '<p>No evidence found.</p>'}
 <h2>Warranty</h2><p><b>{e(p['warranty']['status'])}</b> (until {e(p['warranty']['ends'])}). {e(p['warranty']['note'])}</p>
