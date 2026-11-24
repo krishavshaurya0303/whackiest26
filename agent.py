@@ -212,6 +212,9 @@ def verify_with_rules(case, evidence):
             findings.append({"label": "Unsafe", "title": "Involves internal electrical parts",
                              "why": "This needs an authorised technician.",
                              "excerpt": "", "evidence_id": e["id"]})
+    # strongest evidence first: Verified, then Unsafe (safety warning), then Likely, then Unknown
+    rank = {"Verified": 0, "Unsafe": 1, "Likely": 2, "Unknown": 3}
+    findings.sort(key=lambda f: rank.get(f["label"], 9))
     return findings[:4]
 
 

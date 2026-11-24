@@ -154,7 +154,7 @@ if p:
         if st.button("Draft complaint letter", use_container_width=True):
             facts = (f"Product: {c['brand']} {c['model']}, bought {c['purchase_date']}, "
                      f"warranty status: {p['warranty']['status']} (until {p['warranty']['ends']}). "
-                     f"Fault: error {c['error_code']} - {c['problem']}. Issue: {issue}.")
+                     f"Fault: error {c['error_code']} - {c['problem'].rstrip('.')}. Issue: {issue.rstrip('.')}.")
             try:
                 letter = ask_llm("Write a short, polite, firm consumer complaint letter to the brand's customer care "
                                  "using ONLY these facts. Leave [blanks] for anything unknown. Do not cite laws "
