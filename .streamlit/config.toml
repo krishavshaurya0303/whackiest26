@@ -1,7 +1,7 @@
-# MendMap theme - black / burgundy / white
+# MendMap theme - Black Pearl / Turquoise Sea / Flush Orange
 [theme]
 base = "dark"
-primaryColor = "#6d001a"              # burgundy
-backgroundColor = "#1f1f22"           # charcoal
-secondaryBackgroundColor = "#2b2b2f"  # card / input surface
-textColor = "#ffffff"                 # white
+primaryColor = "#ff6d04"              # flush orange
+backgroundColor = "#04141e"           # black pearl
+secondaryBackgroundColor = "#0a2432"  # card / input surface
+textColor = "#eaf6f8"                 # near-white

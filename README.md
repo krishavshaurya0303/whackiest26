@@ -7,6 +7,31 @@ MendMap is a browser agent for repairs. Tell it your exact product, error code a
 
 > Other repair bots guess from a photo. MendMap proves it from the manufacturer, then gets it fixed.
 
+![MendMap home](docs/home.png)
+
+## Demo case (real, official sources)
+
+**Bosch WGA1340SIN** front-load washing machine showing **`E:36 / -10`** (water not draining).
+
+| What the agent reads | Source |
+|---|---|
+| Official support page | [Bosch India - washing machine does not drain](https://www.bosch-home.com/in/service/get-support/washing-machine-does-not-drain-water) |
+| Official manual (PDF) | [WGA1340SIN user manual](https://media3.bosch-home.com/Documents/9001795155_A.pdf) |
+| Drain pump prices | Payflip · Amazon.in |
+
+Result: **Verified** - *"E:36 / -10" Drain pipe or water outlet hose is blocked* (manual, page 37), plus Likely steps
+from Bosch India, warranty status, the cheapest part (flagged as a generic part whose fit is not confirmed),
+and a pre-filled service request that stops before Submit.
+
+![Full run: Agent Trace with page screenshots, Repair Passport](docs/full_run.png)
+
+## What you see while it works
+
+- **Live Agent Trace** - a numbered timeline of every step, with a **screenshot of every web page the agent opens**.
+- **Evidence labels** - Verified / Likely / Unknown / Unsafe, each with the exact quote, source URL and PDF page.
+- **Honest prices** - reads the real selling price (skips struck-out MRPs) and says whether the shop page names your exact model.
+- **Privacy** - declines optional cookies, and strips the "Delivering to <area PIN>" text from screenshots and cached pages.
+
 ## How it works
 
 ```
@@ -42,9 +67,13 @@ cp .env.example .env        # then edit .env
 streamlit run app.py
 ```
 
-1. Edit `demo_case.json` with a real product: brand, model, error code, the **official support page URL** and **manual PDF URL**, plus 2 part shop URLs.
-2. Run once with internet. Every page read is cached in `cache/`, so the demo still works if a site fails later.
-3. If a site blocks bots, save its text to `cache/manual.txt` and use the source `local:cache/manual.txt`.
+Open http://localhost:8501 and press **Start investigation** (a live run takes about 40 seconds).
+
+- Works with no API keys: `LLM_PROVIDER=mock` labels evidence with simple rules. Add a Gemini key or AWS Bedrock
+  model in `.env` for AI labelling, and ElevenLabs keys for the voice summary.
+- The demo case's pages are cached in `cache/`, so it still runs if a site is down or there is no internet.
+- To try another product, edit `demo_case.json` (or the form): brand, model, error code, official support page,
+  manual PDF, and part shop pages. If a site blocks bots, save its text to a file and use `local:path/to/file.txt`.
 
 ## Safety and control
 
@@ -56,9 +85,12 @@ streamlit run app.py
 ## Honest limits (MVP)
 
 - The service request form is a demo copy. Real brand forms differ.
-- Part prices come from the first price found on the page; always double-check.
+- Part prices are read from the shop page; generic "suitable for" parts are flagged, always double-check the fit.
 - Warranty is calculated from the purchase date and period you enter.
+- Source URLs are given by the user for now (search engines block automated searching).
 
 ## Roadmap
 
-Photo to exact model · live-site service booking · price history for parts · Right to Repair Portal India integration · repair-cost and failure map across users.
+Auto-find official sources via each brand's own site search · real brand service booking (stop before OTP/Submit) ·
+nearest authorised service centre by PIN code · invoice / rating-label photo to model and purchase date ·
+Hindi/Kannada voice input · National Consumer Helpline escalation · Right to Repair Portal India integration.

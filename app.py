@@ -15,6 +15,7 @@ import pathlib
 
 import requests
 import streamlit as st
+import streamlit.components.v1 as components
 from dotenv import load_dotenv
 
 load_dotenv()            # read .env BEFORE importing agent/llm, so the provider setting is picked up
@@ -29,24 +30,30 @@ st.set_page_config(page_title=APP_NAME, layout="wide")
 demo = json.loads((BASE / "demo_case.json").read_text(encoding="utf-8"))
 
 # ---------------------------------------------------------------- look & feel
-# Colours = black / burgundy (#6D001A) / white. Motion inspired by the wHACKiest 2026 site (not a copy): heavy display type,
+# Colours = Black Pearl #04141E, Turquoise Sea #64DBE8, Flush Orange #FF6D04. Motion inspired by the wHACKiest 2026 site (not a copy): heavy display type,
 # a square accent full stop, blue mono labels, and bold "lift with a hard shadow" hover motion on cards.
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@112,700;112,800;112,900&family=Space+Grotesk:wght@500;600;700&family=Space+Mono:wght@400;700&display=swap');
-:root { /* Black / Burgundy / White palette */
-        --paper:#1f1f22; --card:#2b2b2f; --sunk:#36363b; --grid:transparent; --line:#45454b;
-        --edge:#56565d; --shade:#121214;
-        --ink:#ffffff; --ink2:#dadada; --ink3:#a6a6ac;
-        --orange:#6d001a;        /* burgundy: fills (buttons, step blocks, dot, hover shadow) */
-        --orange-ink:#f0516f;    /* brighter burgundy for small accent text on black */
-        --blue:#d6d6d6; --blue-line:#333333; --amber:#d9a441; --green:#8fb573;
+:root { /* Palette: Black Pearl #04141E, Turquoise Sea #64DBE8, Flush Orange #FF6D04 */
+        --pink:#ff6d04;  /* flush orange  - fills: button, trace blocks, hover shadow */
+        --cyan:#64dbe8;  /* turquoise sea - accents: numbers, Verified, hover edges   */
+        --purple:#3fa7b4; /* deeper turquoise - labels, glow                          */
+        --peach:#ff9a4d; /* lighter orange - prices, Likely                          */
+        --night:#04141e; /* black pearl - background                                 */
+        --paper:#04141e; --card:rgba(10,36,50,.72); --sunk:#0b2633; --grid:transparent; --line:#163a48;
+        --edge:#1d4656; --shade:#010a0f;
+        --ink:#eaf6f8; --ink2:#b5cdd3; --ink3:#7b98a1;
+        --orange:#ff6d04; --orange-ink:#64dbe8;
+        --blue:#3fa7b4; --blue-line:#1d4656; --amber:#ff9a4d; --green:#64dbe8;
         --flow: cubic-bezier(.22, 1, .36, 1);            /* soft glide-and-settle */
         --spring: cubic-bezier(.34, 1.56, .64, 1); }     /* tiny overshoot, feels alive */
 
-/* charcoal background with a soft burgundy glow at the top */
-.stApp { background-color: var(--paper);
-         background-image: radial-gradient(ellipse 90% 55% at 15% -10%, rgba(109,0,26,.55), transparent 70%); }
+/* black pearl night: turquoise fog at the top, an orange neon glow along the bottom */
+.stApp { background-color: var(--night); background-attachment: fixed;
+         background-image: radial-gradient(ellipse 80% 50% at 10% -10%, rgba(100,219,232,.22), transparent 70%),
+                           radial-gradient(ellipse 70% 45% at 95% 0%, rgba(63,167,180,.14), transparent 70%),
+                           radial-gradient(ellipse 110% 50% at 50% 118%, rgba(255,109,4,.38), rgba(255,154,77,.08) 45%, transparent 75%); }
 header[data-testid="stHeader"] { background: transparent; }
 .block-container { padding-top: 1.4rem; max-width: 1280px; }
 
@@ -142,6 +149,69 @@ header[data-testid="stHeader"] { background: transparent; }
 .mm-note { font-size: 14.5px; font-weight: 500; color: var(--ink2); }
 .mm-cost { font-weight: 700; font-size: 18px; color: var(--orange-ink); }
 
+/* dot-matrix background (drawn by the script below): sits behind everything, content stays on top */
+#mm-dots { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 1; }
+.stApp [data-testid="stMain"] { position: relative; z-index: 2; }
+header[data-testid="stHeader"] { z-index: 3; }
+
+/* cards: a soft spotlight follows the mouse inside the card (colour set in the neon section) */
+.stApp [class*="st-key-card"] { background-image: radial-gradient(320px circle at var(--mx, -400px) var(--my, -400px),
+                                                  rgba(100,219,232,.13), transparent 60%); }
+
+/* ---------------- neon touches (turquoise + orange glows) ---------------- */
+/* title: white -> turquoise gradient letters with a soft glow, orange full stop */
+.stApp .mm-display .w { background: linear-gradient(95deg, #ffffff 0%, #c9f3f7 40%, var(--cyan) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 0 18px rgba(100,219,232,.35)); }
+.mm-dot { background: var(--pink); box-shadow: 0 0 14px var(--pink), 0 0 28px rgba(255,109,4,.55); }
+.mm-hero { border-bottom: 1.5px solid transparent;
+    border-image: linear-gradient(90deg, var(--cyan), var(--purple) 45%, var(--pink) 80%, transparent) 1; }
+
+/* glassy neon cards: see-through panel, glowing edge on hover */
+.stApp [class*="st-key-card"] { backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    border-color: rgba(63,167,180,.35) !important; box-shadow: 4px 4px 0 var(--shade), 0 0 0 rgba(0,0,0,0); }
+.stApp [class*="st-key-card"]:hover { border-color: var(--cyan) !important;
+    box-shadow: 9px 9px 0 var(--pink), 0 0 34px rgba(100,219,232,.25); }
+.stApp [class*="st-key-card"] { background-image: radial-gradient(340px circle at var(--mx, -400px) var(--my, -400px),
+                                                  rgba(63,167,180,.20), transparent 60%); }
+
+/* inputs: glow cyan when focused */
+.stTextInput > div:focus-within, .stTextArea > div:focus-within, .stNumberInput > div > div:focus-within {
+    border-color: var(--cyan) !important; box-shadow: 0 0 0 3px rgba(100,219,232,.18), 0 0 18px rgba(100,219,232,.25); }
+
+/* main button: flush orange neon */
+.stButton > button[kind="primary"] { background: var(--pink); border-color: transparent;
+    color: var(--night); box-shadow: 3px 3px 0 var(--shade), 0 0 22px rgba(255,109,4,.45); }
+.stButton > button[kind="primary"] p { color: var(--night); font-weight: 800; }
+.stButton > button[kind="primary"]:hover { background: #ff8a33; color: var(--night);
+    box-shadow: 6px 6px 0 var(--cyan), 0 0 36px rgba(255,109,4,.7); }
+.stButton > button:hover, .stDownloadButton > button:hover { border-color: var(--cyan); }
+
+/* header step chips */
+.mm-flow span { border-color: rgba(63,167,180,.45); }
+.mm-flow b { color: var(--cyan); text-shadow: 0 0 10px rgba(100,219,232,.6); }
+.mm-flow span:hover { background: var(--pink); box-shadow: 6px 6px 0 var(--cyan), 0 0 20px rgba(255,109,4,.6); }
+.mm-flow span:hover, .mm-flow span:hover b { color: var(--night); text-shadow: none; }
+
+/* labels glow turquoise */
+.mm-label, .mm-eyebrow { color: var(--purple); text-shadow: 0 0 12px rgba(63,167,180,.45); }
+
+/* Agent Trace timeline: orange blocks, an orange -> turquoise line, turquoise for "your turn" */
+.mm-step .n { background: var(--pink); color: var(--night); border-color: transparent;
+              box-shadow: 3px 3px 0 var(--shade), 0 0 16px rgba(255,109,4,.55); }
+.mm-step:hover .n { box-shadow: 5px 5px 0 var(--cyan), 0 0 22px rgba(255,109,4,.8); }
+.mm-step::before { background: linear-gradient(var(--pink), var(--purple)); box-shadow: 0 0 8px rgba(255,109,4,.6); }
+.mm-step.needs_you .n { background: var(--cyan); color: var(--night); box-shadow: 3px 3px 0 var(--shade), 0 0 18px rgba(100,219,232,.7); }
+.mm-step.needs_you .t { color: var(--cyan); text-decoration: none; }
+.mm-step.failed .n { background: var(--peach); }
+.mm-src { color: #7fc9d3; }
+
+/* evidence + prices */
+.mm-quote { border-left-color: var(--cyan); background: rgba(11,38,51,.85); box-shadow: inset 4px 0 14px -8px var(--cyan); }
+.mm-cost { color: var(--peach); text-shadow: 0 0 12px rgba(255,154,77,.45); }
+.mm-chip { border-color: currentColor !important; box-shadow: 0 0 12px -2px currentColor; }
+[data-testid="stImage"] img:hover { box-shadow: 8px 8px 0 var(--pink), 0 0 30px rgba(100,219,232,.25); }
+
 /* ---------------- keyframes ---------------- */
 @keyframes mm-rise  { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
 @keyframes mm-word  { from { opacity: 0; transform: translateY(60%) skewY(6deg); } to { opacity: 1; transform: none; } }
@@ -161,6 +231,117 @@ header[data-testid="stHeader"] { background: transparent; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
 """, unsafe_allow_html=True)
+
+# ---------------------------------------------------------------- background animation (dot field that follows the mouse)
+# Streamlit doesn't run <script> tags inside st.markdown, so we use a tiny invisible component.
+# Its iframe is on the same origin as the page, so the script can add the cursor to the main page.
+components.html("""
+<script>
+(function () {
+  const doc = window.parent.document, win = window.parent;
+  if (doc.getElementById('mm-dots')) return;                      // already added (Streamlit reruns)
+  if (win.matchMedia('(pointer: coarse)').matches) return;        // touch screens: skip
+  if (win.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  // ---- setup: one full-screen canvas behind the page content ----
+  const canvas = doc.createElement('canvas'); canvas.id = 'mm-dots';
+  doc.body.prepend(canvas);
+  const ctx = canvas.getContext('2d');
+  const GAP = 18;            // distance between dots (px)
+  const R = 240;             // radius of the light around the mouse (px)
+  let W, H, dpr, grid;       // grid = the faint dots, drawn once and reused every frame
+
+  function resize() {
+    dpr = win.devicePixelRatio || 1; W = win.innerWidth; H = win.innerHeight;
+    canvas.width = W * dpr; canvas.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    grid = doc.createElement('canvas'); grid.width = W * dpr; grid.height = H * dpr;
+    const g = grid.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.fillStyle = 'rgba(100,219,232,0.08)';
+    for (let y = GAP / 2; y < H; y += GAP) for (let x = GAP / 2; x < W; x += GAP) {
+      g.beginPath(); g.arc(x, y, 0.8, 0, Math.PI * 2); g.fill();
+    }
+  }
+  win.addEventListener('resize', resize); resize();
+
+  // ---- colours: deep turquoise (edge) -> flush orange -> warm white (centre) ----
+  const STOPS = [[63, 167, 180], [255, 109, 4], [255, 226, 190]];
+  function colour(k) {                                  // k: 0 at the edge .. 1 at the centre
+    const i = k < 0.5 ? 0 : 1, f = k < 0.5 ? k / 0.5 : (k - 0.5) / 0.5, a = STOPS[i], b = STOPS[i + 1];
+    return [a[0] + (b[0] - a[0]) * f | 0, a[1] + (b[1] - a[1]) * f | 0, a[2] + (b[2] - a[2]) * f | 0];
+  }
+  const smooth = (x) => x * x * (3 - 2 * x);           // smoothstep: soft start, soft end
+
+  // ---- state ----
+  let mx = W * 0.7, my = H * 0.25;                     // mouse
+  let lx = mx, ly = my;                                 // light: chases the mouse slowly (silky trail)
+  let power = 0;                                        // light fades in when the mouse moves, out when idle
+  let lastMove = 0;
+  const ripples = [];                                   // click -> a ring of light spreads out
+
+  doc.addEventListener('mousemove', (e) => { mx = e.clientX; my = e.clientY; lastMove = performance.now(); });
+  doc.addEventListener('mousedown', (e) => ripples.push({ x: e.clientX, y: e.clientY, t0: performance.now() }));
+
+  // light one dot (strength k = 0..1)
+  function dot(x, y, k, rgb) {
+    const [r, g, b] = rgb || colour(k);
+    ctx.fillStyle = `rgba(${r},${g},${b},${0.10 + k * 0.9})`;
+    ctx.beginPath(); ctx.arc(x, y, 0.9 + k * 2.4, 0, Math.PI * 2); ctx.fill();
+  }
+
+  function frame(now) {
+    // ease everything: the light glides after the mouse and breathes in/out
+    lx += (mx - lx) * 0.06; ly += (my - ly) * 0.06;
+    const moving = now - lastMove < 1200;
+    power += ((moving ? 1 : 0.6) - power) * 0.04;
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(grid, 0, 0, W, H);
+
+    // soft turquoise -> orange bloom under the light (no hard edges)
+    const bloom = ctx.createRadialGradient(lx, ly, 0, lx, ly, R * 1.6);
+    bloom.addColorStop(0, `rgba(63,167,180,${0.30 * power})`);
+    bloom.addColorStop(0.45, `rgba(255,109,4,${0.10 * power})`);
+    bloom.addColorStop(1, 'rgba(255,109,4,0)');
+    ctx.fillStyle = bloom; ctx.fillRect(0, 0, W, H);
+
+    // the light also "breathes" slowly so it never looks frozen
+    const breathe = 1 + Math.sin(now / 1400) * 0.06, rad = R * breathe;
+
+    // dots inside the light
+    const x0 = Math.max(GAP / 2, Math.floor((lx - rad) / GAP) * GAP + GAP / 2);
+    const y0 = Math.max(GAP / 2, Math.floor((ly - rad) / GAP) * GAP + GAP / 2);
+    for (let y = y0; y < Math.min(H, ly + rad); y += GAP)
+      for (let x = x0; x < Math.min(W, lx + rad); x += GAP) {
+        const d = Math.hypot(x - lx, y - ly); if (d > rad) continue;
+        dot(x, y, smooth(1 - d / rad) * power);
+      }
+
+    // click ripples: a thin ring of light that grows and fades
+    for (let i = ripples.length - 1; i >= 0; i--) {
+      const rp = ripples[i], age = (now - rp.t0) / 1600;          // 0 -> 1 over 1.6 s
+      if (age >= 1) { ripples.splice(i, 1); continue; }
+      const front = smooth(age) * 520, fade = 1 - age, band = 26;
+      const xa = Math.max(GAP / 2, Math.floor((rp.x - front - band) / GAP) * GAP + GAP / 2);
+      const ya = Math.max(GAP / 2, Math.floor((rp.y - front - band) / GAP) * GAP + GAP / 2);
+      for (let y = ya; y < Math.min(H, rp.y + front + band); y += GAP)
+        for (let x = xa; x < Math.min(W, rp.x + front + band); x += GAP) {
+          const off = Math.abs(Math.hypot(x - rp.x, y - rp.y) - front); if (off > band) continue;
+          dot(x, y, smooth(1 - off / band) * fade * 0.9, [100, 219, 232]);   // cyan ripple
+        }
+    }
+    win.requestAnimationFrame(frame);
+  }
+  win.requestAnimationFrame(frame);
+
+  // cards: tell the card under the mouse where the mouse is (for its soft inner spotlight)
+  doc.addEventListener('mousemove', (e) => {
+    const card = e.target.closest('[class*="st-key-card"]'); if (!card) return;
+    const r = card.getBoundingClientRect();
+    card.style.setProperty('--mx', (e.clientX - r.left) + 'px'); card.style.setProperty('--my', (e.clientY - r.top) + 'px');
+  });
+})();
+</script>
+""", height=0)
 
 # (HTML kept on single lines: Streamlit's markdown turns indented lines into code blocks)
 flow = "".join(f"<span><b>{i:02d}</b> {w}</span>" for i, w in
