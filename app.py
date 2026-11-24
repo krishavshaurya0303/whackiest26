@@ -42,11 +42,8 @@ st.markdown("""
         --flow: cubic-bezier(.22, 1, .36, 1);            /* soft glide-and-settle */
         --spring: cubic-bezier(.34, 1.56, .64, 1); }     /* tiny overshoot, feels alive */
 
-/* dark background with a very faint grid */
-.stApp { background-color: var(--paper);
-         background-image: linear-gradient(var(--grid) 1px, transparent 1px),
-                           linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-         background-size: 44px 44px; }
+/* plain dark background */
+.stApp { background-color: var(--paper); }
 header[data-testid="stHeader"] { background: transparent; }
 .block-container { padding-top: 1.4rem; max-width: 1280px; }
 
